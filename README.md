@@ -24,3 +24,12 @@ Most space-weather dashboards dump raw physics charts ($B_z$, proton density, so
                                                                 │
                                                  [React / Next.js Dashboard]
 
+## Build Roadmap & Progress 
+
+- [x] **Phase 0:** Repository initialization, folder architecture & living documentation setup
+- [x] **Phase 1:** Space-weather dataset acquisition, cleaning & Exploratory Data Analysis (EDA)
+- [ ] **Phase 2:** Time-series feature engineering & ML model training ($K_p$ Index forecasting)
+- [ ] **Phase 3:** FastAPI backend integration with live NOAA telemetry & AI risk explainer
+- [ ] **Phase 4:** Interactive Space Weather Control Center dashboard & deployment
+                        
+
