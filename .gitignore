@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# OS & Project Data
+desktop.ini
+data/*.csv
+data/*.txt
