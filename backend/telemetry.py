@@ -37,7 +37,7 @@ FEATURE_COLUMNS_FILE = Path(__file__).resolve().parent.parent / "models" / "feat
 
 
 def load_feature_columns() -> List[str]:
-    """Load canonical list of 28 feature columns from models/feature_columns.json."""
+    """Load canonical list of 34 feature columns from models/feature_columns.json."""
     if FEATURE_COLUMNS_FILE.exists():
         try:
             with open(FEATURE_COLUMNS_FILE, "r", encoding="utf-8") as f:
@@ -54,7 +54,9 @@ def load_feature_columns() -> List[str]:
         "wind_speed_roll6_mean", "proton_density_lag1", "proton_density_lag3",
         "proton_density_lag6", "proton_density_roll6_mean", "electric_field_coupling_lag1",
         "electric_field_coupling_lag3", "electric_field_coupling_lag6",
-        "electric_field_coupling_roll6_mean", "bz_roll6_min", "speed_roll6_max"
+        "electric_field_coupling_roll6_mean", "bz_roll6_min", "speed_roll6_max",
+        "newell_coupling_proxy", "newell_roll3_sum", "bz_south_streak",
+        "speed_diff_1h", "pressure_diff_1h", "bz_roll3_mean"
     ]
 
 
@@ -205,8 +207,8 @@ def fetch_live_telemetry() -> Tuple[pd.DataFrame, bool]:
 
 def compute_features(df_hourly: pd.DataFrame) -> pd.DataFrame:
     """
-    Compute the exact 28 physics, lag, and rolling features matching
-    Phase 2 training schema in models/feature_columns.json.
+    Compute the exact 34 physics, lag, and rolling features matching
+    v2 training schema in models/feature_columns.json.
     """
     df = df_hourly.copy()
 
@@ -231,6 +233,26 @@ def compute_features(df_hourly: pd.DataFrame) -> pd.DataFrame:
     # 3. 6-hour rolling extremes
     df["bz_roll6_min"] = df["bz_gsm"].rolling(6, min_periods=1).min()
     df["speed_roll6_max"] = df["wind_speed"].rolling(6, min_periods=1).max()
+
+    # 4. 6 NEW v2 PHYSICS & PERSISTENCE FEATURES
+    # A. Newell coupling proxy: (v^(4/3)) * (|Bz_south|^(2/3))
+    df["newell_coupling_proxy"] = (df["wind_speed"] ** (4.0 / 3.0)) * (np.abs(df["bz_south"]) ** (2.0 / 3.0))
+
+    # B. 3h cumulative Newell coupling
+    df["newell_roll3_sum"] = df["newell_coupling_proxy"].rolling(3, min_periods=1).sum()
+
+    # C. Consecutive hours of southward Bz < -4.0 nT
+    cond_south = (df["bz_gsm"] < -4.0)
+    df["bz_south_streak"] = cond_south.groupby((~cond_south).cumsum()).cumsum()
+
+    # D. 1h rate of change in solar wind speed
+    df["speed_diff_1h"] = df["wind_speed"].diff(1).fillna(0.0)
+
+    # E. 1h rate of change in dynamic pressure
+    df["pressure_diff_1h"] = df["dynamic_pressure"].diff(1).fillna(0.0)
+
+    # F. 3h rolling mean of Bz GSM
+    df["bz_roll3_mean"] = df["bz_gsm"].rolling(3, min_periods=1).mean()
 
     # Backward-fill the earliest edge rows so lag features are never NaN
     df = df.bfill().ffill()
@@ -267,6 +289,8 @@ def get_feature_vector(df_features: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[st
         "dynamic_pressure": round(float(latest_row["dynamic_pressure"]), 3),
         "electric_field_coupling": round(float(latest_row["electric_field_coupling"]), 1),
         "bz_south": round(float(latest_row["bz_south"]), 2),
+        "newell_coupling_proxy": round(float(latest_row.get("newell_coupling_proxy", 0.0)), 1),
+        "bz_south_streak": int(latest_row.get("bz_south_streak", 0)),
     }
 
     return X_latest, current_telemetry

@@ -254,6 +254,8 @@ def get_forecast(
         current_telemetry["proton_density"] = 18.5
         current_telemetry["dynamic_pressure"] = round(18.5 * (720.0 ** 2) * 1e-6, 3)
         current_telemetry["electric_field_coupling"] = round(720.0 * 14.2, 1)
+        current_telemetry["newell_coupling_proxy"] = round((720.0 ** (4.0 / 3.0)) * (14.2 ** (2.0 / 3.0)), 1)
+        current_telemetry["bz_south_streak"] = 6
         is_live_feed = False
     else:
         # 3. Model Inference

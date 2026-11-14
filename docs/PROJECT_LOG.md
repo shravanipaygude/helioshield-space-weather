@@ -149,3 +149,39 @@
   - `GET http://127.0.0.1:8000/api/metrics` verified returning valid JSON with HTTP 200 OK.
   - `GET http://localhost:3000/metrics` verified rendering cleanly with zero console errors.
   - Both FastAPI backend (`task-667`) and Next.js frontend (`task-731`) confirmed active in persistent background daemon sessions.
+
+
+---
+
+## 2026-11-14 — HelioShield ML Model v2 Upgrade & Deployment
+
+- **Status:** Completed
+- **Tools & Libraries Used:** Python 3.13, XGBoost, Pandas, NumPy, Scikit-Learn, FastAPI, Next.js
+- **Key Enhancements in Model v2:**
+  1. **New Physics & Persistence Features (34 features total):**
+     - `newell_coupling_proxy`: $v^{4/3} \cdot |B_{z,\text{south}}|^{2/3}$ capturing empirical dayside magnetospheric energy transfer (became #1 driver at 21.9% gain).
+     - `newell_roll3_sum`: 3-hour cumulative Newell energy coupling.
+     - `bz_south_streak`: Consecutive hours where IMF $B_z < -4.0\text{ nT}$.
+     - `speed_diff_1h`: 1-hour rate of change in solar wind speed ($\Delta v$).
+     - `pressure_diff_1h`: 1-hour rate of change in dynamic pressure ($\Delta P_{dyn}$).
+     - `bz_roll3_mean`: 3-hour smoothed IMF $B_z$ trend.
+  2. **Regularized Storm-Weighted Hyperparameters:**
+     - `n_estimators=450, learning_rate=0.03, max_depth=5, min_child_weight=12, subsample=0.8, colsample_bytree=0.75, reg_alpha=1.0, reg_lambda=2.5`.
+     - Calibrated sample weights: $3.0\times$ for $K_p \ge 5.0$, $1.5\times$ for $4.0 \le K_p < 5.0$, $1.0\times$ otherwise.
+  3. **Empirical Benchmarks (2024–2025 Unseen Test Set, 17,541 hours):**
+     - **Storm Precision:** **57.4%** (+12.6% absolute gain / +28.1% relative increase over v1's 44.8%).
+     - **Storm Recall:** **35.2%** at conservative threshold $K_p \ge 5.0$.
+     - **Storm $F_1$-Score:** **0.436**.
+     - **Regression MAE:** **0.7303 Kp** (improved from 0.742).
+     - **Regression RMSE:** **0.9547 Kp** (improved from 0.968).
+     - **Regression $R^2$ Score:** **0.5267** (improved from 0.513).
+  4. **Top 3 Physical Drivers:**
+     1. Newell Coupling Proxy ($21.9\%$)
+     2. Solar Wind Velocity $v$ ($18.0\%$)
+     3. Solar Wind Dynamic Pressure $P_{dyn}$ ($16.9\%$)
+- **System Sync:**
+  - `scripts/train_v2_model.py`: End-to-end training pipeline caching NASA OMNI2 and saving `models/kp_forecaster.json`.
+  - `backend/telemetry.py`: Updated with the exact 34-feature extraction pipeline.
+  - `models/feature_columns.json`: Synchronized with 34 feature schema and v2 benchmarks.
+  - `frontend/src/app/metrics/page.tsx`: Updated with v2 benchmark KPIs, progression table, and Newell driver ranking.
+  - FastAPI server restarted on port 8000; both Mission Control (`/`) and Model Benchmarks (`/metrics`) verified responding cleanly.

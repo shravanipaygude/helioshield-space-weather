@@ -27,21 +27,27 @@
     "electric_field_coupling_lag6",
     "electric_field_coupling_roll6_mean",
     "bz_roll6_min",
-    "speed_roll6_max"
+    "speed_roll6_max",
+    "newell_coupling_proxy",
+    "newell_roll3_sum",
+    "bz_south_streak",
+    "speed_diff_1h",
+    "pressure_diff_1h",
+    "bz_roll3_mean"
   ],
-  "alert_threshold_kp": 4.5,
+  "alert_threshold_kp": 5.0,
   "horizon_hours": 3,
   "validation_metrics": {
-    "algorithm": "Storm-Weighted XGBoost Regressor",
+    "algorithm": "Storm-Weighted XGBoost Regressor v2",
     "train_window": "2016-2023 (70,122 hrs)",
     "test_window": "2024-2025 (17,541 hrs)",
-    "mae": 0.742,
-    "rmse": 0.968,
-    "r2_score": 0.513,
+    "mae": 0.7303,
+    "rmse": 0.9547,
+    "r2_score": 0.5267,
     "storm_threshold_kp": 5.0,
-    "precision": 44.8,
-    "recall": 53.4,
-    "f1_score": 0.487,
+    "precision": 57.4,
+    "recall": 35.2,
+    "f1_score": 0.436,
     "baseline_comparison": [
       {
         "model": "Random Forest",
@@ -64,52 +70,72 @@
         "is_deployed": false
       },
       {
-        "model": "Storm-Weighted XGBoost (HelioShield)",
+        "model": "Storm-Weighted XGBoost v1",
         "mae": 0.742,
         "rmse": 0.968,
         "r2": 0.513,
         "precision": 44.8,
         "recall": 53.4,
         "f1": 0.487,
+        "is_deployed": false
+      },
+      {
+        "model": "Storm-Weighted XGBoost v2 (HelioShield)",
+        "mae": 0.730,
+        "rmse": 0.955,
+        "r2": 0.527,
+        "precision": 57.4,
+        "recall": 35.2,
+        "f1": 0.436,
         "is_deployed": true
       }
     ],
     "top_features": [
       {
+        "name": "newell_coupling_proxy",
+        "importance": 0.2193,
+        "label": "Newell Coupling Proxy"
+      },
+      {
+        "name": "wind_speed",
+        "importance": 0.1800,
+        "label": "Solar Wind Velocity (v)"
+      },
+      {
         "name": "dynamic_pressure",
-        "importance": 0.264,
+        "importance": 0.1692,
         "label": "Dynamic Pressure (P_dyn)"
       },
       {
         "name": "electric_field_coupling",
-        "importance": 0.169,
+        "importance": 0.0753,
         "label": "Electric Field Coupling (V × Bz)"
       },
       {
-        "name": "wind_speed",
-        "importance": 0.127,
-        "label": "Solar Wind Velocity (v)"
-      },
-      {
-        "name": "speed_roll6_max",
-        "importance": 0.077,
-        "label": "6h Max Solar Wind Speed"
-      },
-      {
         "name": "bz_roll6_min",
-        "importance": 0.056,
+        "importance": 0.0437,
         "label": "6h Min Southward Bz"
       },
       {
+        "name": "wind_speed_lag1",
+        "importance": 0.0391,
+        "label": "Wind Speed Lag1"
+      },
+      {
+        "name": "speed_roll6_max",
+        "importance": 0.0353,
+        "label": "6h Max Solar Wind Speed"
+      },
+      {
         "name": "electric_field_coupling_roll6_mean",
-        "importance": 0.054,
+        "importance": 0.0326,
         "label": "6h Mean Electric Coupling"
       }
     ],
     "class_imbalance": {
       "quiet_hours_pct": 97.9,
       "storm_hours_pct": 2.1,
-      "weight_multiplier": 5.0
+      "weight_multiplier": 3.0
     }
   }
 }
