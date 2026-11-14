@@ -113,3 +113,16 @@
   - `frontend/src/app/layout.tsx`: Root layout with dark mode mission styling and typography.
   - `frontend/src/app/globals.css`: Custom scrollbars, glassmorphism panels, and glow utilities.
   - `frontend/package.json`: Configured with Next.js, Lucide Icons, and Recharts.
+
+
+---
+
+## 2026-11-14 — Gemini Model Migration & Resilience Enhancement
+
+- **Status:** Completed
+- **Root Cause Analysis:** Google AI Studio's `gemini-3.8-flash` preview endpoint experienced upstream server congestion (`504 Gateway Timeout` and `503 UNAVAILABLE: Spikes in demand are usually temporary`), triggering the deterministic physics-based fallback.
+- **Model Migration:** Transitioned to `gemini-3.5-flash-lite`, which provides fast inference and reliable free-tier quota.
+- **Resilience & Observability:**
+  - Added explicit exception logging and stack tracing to terminal output for transparent debugging.
+  - Implemented `HttpOptions` with `HttpRetryOptions(attempts=3, initial_delay=1.0)` to absorb transient upstream spikes seamlessly.
+- **Verification:** Both live telemetry and simulated storm endpoints verified returning `ai_source: "Gemini 3.5 Flash-Lite (Live Generative AI)"` with valid structured disruption briefings.

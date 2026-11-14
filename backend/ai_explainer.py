@@ -4,7 +4,7 @@ backend/ai_explainer.py - AI Reasoning Layer for HelioShield.
 Translates real-time solar wind telemetry and ML Kp forecasts into actionable,
 sector-specific operational disruption briefings.
 
-Uses google-genai (gemini-2.5-flash) if GEMINI_API_KEY is configured in .env,
+Uses google-genai (gemini-3.5-flash-lite) if GEMINI_API_KEY is configured in .env,
 with a physics-informed rule-based fallback when no key is set or upon API errors.
 Returns structured JSON briefings covering headline, summary, and sector assessments
 for:
@@ -261,7 +261,7 @@ def generate_ai_briefing(
 ) -> Dict[str, Any]:
     """
     Generate structured JSON space weather briefing using google-genai
-    (gemini-2.5-flash) if GEMINI_API_KEY is available, or fall back to
+    (gemini-3.5-flash-lite) if GEMINI_API_KEY is available, or fall back to
     rule-based generator.
     """
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
@@ -275,7 +275,13 @@ def generate_ai_briefing(
         from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=12000,
+                retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1.0)
+            )
+        )
 
         bz_gsm = telemetry.get("bz_gsm", 0.0)
         bz_south = telemetry.get("bz_south", min(bz_gsm, 0.0))
@@ -330,7 +336,7 @@ Output ONLY a single valid raw JSON object (strictly no markdown formatting, no 
 """
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
@@ -345,8 +351,8 @@ Output ONLY a single valid raw JSON object (strictly no markdown formatting, no 
             response_text = re.sub(r"\s*```$", "", response_text)
 
         briefing = json.loads(response_text)
-        briefing["ai_source"] = "Gemini 2.5 Flash (Live Generative AI)"
-        briefing["model_version"] = "gemini-2.5-flash"
+        briefing["ai_source"] = "Gemini 3.5 Flash-Lite (Live Generative AI)"
+        briefing["model_version"] = "gemini-3.5-flash-lite"
 
         # Validate core fields
         if "headline" in briefing and "summary" in briefing and "sectors" in briefing:
@@ -356,8 +362,12 @@ Output ONLY a single valid raw JSON object (strictly no markdown formatting, no 
         return generate_rule_based_briefing(predicted_kp, horizon_hours, telemetry, storm_alert)
 
     except Exception as e:
-        logger.warning("Error invoking Gemini 2.5 Flash: %s. Using rule-based fallback.", e)
+        import traceback
+        err_msg = f"Gemini 3.5 Flash-Lite invocation failed with {type(e).__name__}: {str(e)}"
+        print(f"[ERROR] {err_msg}", flush=True)
+        traceback.print_exc()
+        logger.error("%s\n%s", err_msg, traceback.format_exc())
         fallback = generate_rule_based_briefing(predicted_kp, horizon_hours, telemetry, storm_alert)
-        fallback["ai_error_note"] = f"Gemini invocation failed ({str(e)}). Physics-based rule engine was engaged."
+        fallback["ai_error_note"] = err_msg
         return fallback
 

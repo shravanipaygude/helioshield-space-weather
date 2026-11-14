@@ -199,7 +199,7 @@ def get_forecast(
     2. Resample to 1-hour intervals (bz_gsm, bt, wind_speed, proton_density).
     3. Compute 28 physics, lag (1h, 3h, 6h), and rolling features.
     4. Execute 3-hour ahead Kp inference using trained XGBoost model.
-    5. Generate structured disruption briefing (Gemini 2.5 Flash with rule-based fallback).
+    5. Generate structured disruption briefing (Gemini 3.5 Flash-Lite with rule-based fallback).
     6. Return current telemetry, 24h history, forecast, and operational mitigation.
     """
     # 1. Fetch live telemetry or fallback
