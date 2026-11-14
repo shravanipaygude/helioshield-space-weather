@@ -72,3 +72,44 @@
   - Automated endpoint tests passing with HTTP `200 OK` on both live streams and simulated storm injections (`simulate_storm=true`).
   - Active background server daemon running on `http://127.0.0.1:8000`.
 - **Artifacts Saved:** `backend/requirements.txt`, `backend/telemetry.py`, `backend/ai_explainer.py`, `backend/main.py`, `.env.example`
+
+
+---
+
+## 2026-11-14 — Phase 4: Interactive Space Weather Control Center Dashboard & Deployment
+
+- **Status:** Completed
+- **Tools & Libraries Used:** Next.js 15 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS, Lucide React, Recharts
+- **Dashboard Architecture & Components (`frontend/`):**
+  1. **Top Command Header:**
+     - HelioShield Mission Control branding with status badge and pulsing connection indicator.
+     - Live ticking UTC clock badge (`HH:MM:SS UTC`) synchronized to world standards.
+     - Interactive **"Live NOAA / Simulate Severe Storm"** toggle switch that passes `?simulate_storm=true` to `/api/forecast`.
+     - Manual telemetry refresh button with spinning state and auto-polling fallback.
+  2. **Hero Forecast & Live L1 Satellite Telemetry Row:**
+     - **3-Hour $K_p$ Forecast Gauge:** Prominently renders predicted $K_p$ index, NOAA G-Scale classification (G0–G5) with dynamic color coding (emerald `G0` through crimson `G5`), storm category, target timestamp, and confidence interval bounds (`lower` to `upper`).
+     - **4 Live L1 Satellite KPI Cards:** Real-time DSCOVR/ACE measurements for Solar Wind Speed (`km/s`), Interplanetary Magnetic Field $B_z$ GSM (`nT` — highlighted crimson when negative/southward indicating reconnection), Proton Density (`p/cm³`), and Solar Wind Dynamic Pressure ($P_{dyn}$ in `nPa`).
+  3. **AI Operational Risk Briefing Panel:**
+     - Source attribution badge (`gemini-2.5-flash` or physics rule-based fallback).
+     - Headline operational alert and executive technical summary.
+     - 4 high-consequence sector risk cards:
+       - **Satellites (LEO/GEO):** Evaluates thermospheric orbital drag and surface electrostatic discharge.
+       - **GPS & Trans-Polar Aviation:** Tracks ionospheric scintillation and polar cap HF absorption.
+       - **Power Grids:** Monitors Geomagnetically Induced Currents (GIC) and transformer thermal stress.
+       - **Aurora Visibility:** Displays magnetic latitude reach and viewing conditions.
+  4. **24-Hour Telemetry & Trend Analytics (Recharts):**
+     - Dual interactive, responsive charts plotting the last 24 hours of space weather history:
+       - *Solar Wind Speed & IMF $B_z$ GSM:* Area and line curves revealing solar wind shocks and interplanetary magnetic field rotations.
+       - *$K_p$ Historical Trend & Prediction:* Forecast trajectory alongside a red dashed geomagnetic storm threshold ($K_p = 4.5$).
+  5. **Critical Storm Simulation Engine:**
+     - Allows operators to toggle into a synthetic severe Coronal Mass Ejection scenario ($B_z = -14.2\text{ nT}$, Wind Speed $= 720\text{ km/s}$, Density $= 18.5\text{ p/cm³}$).
+     - Automatically verifies model scaling, resulting in $K_p \approx 7.33$ (G3 Strong Storm) with critical operational sector warnings.
+- **Verification & Testing:**
+  - `npm run build` executed with Turbopack: zero TypeScript errors, static generation succeeded (`5/5` routes).
+  - Dev server active and listening on `http://localhost:3000` (`GET / 200 OK`).
+  - Cross-origin API communication between Next.js and FastAPI (`http://127.0.0.1:8000`) verified for both live NOAA feeds and simulated storm conditions.
+- **Artifacts Created:**
+  - `frontend/src/app/page.tsx`: Complete Mission Control dashboard.
+  - `frontend/src/app/layout.tsx`: Root layout with dark mode mission styling and typography.
+  - `frontend/src/app/globals.css`: Custom scrollbars, glassmorphism panels, and glow utilities.
+  - `frontend/package.json`: Configured with Next.js, Lucide Icons, and Recharts.
