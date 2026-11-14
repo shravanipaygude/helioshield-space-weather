@@ -126,3 +126,26 @@
   - Added explicit exception logging and stack tracing to terminal output for transparent debugging.
   - Implemented `HttpOptions` with `HttpRetryOptions(attempts=3, initial_delay=1.0)` to absorb transient upstream spikes seamlessly.
 - **Verification:** Both live telemetry and simulated storm endpoints verified returning `ai_source: "Gemini 3.5 Flash-Lite (Live Generative AI)"` with valid structured disruption briefings.
+
+
+---
+
+## 2026-11-14 — Dedicated Model Performance & Validation Architecture (`/metrics`)
+
+- **Status:** Completed
+- **Tools & Libraries Used:** Next.js 15, React 19, TypeScript, Tailwind CSS, Recharts, FastAPI, Uvicorn
+- **Backend Enhancements (`backend/main.py` & `models/feature_columns.json`):**
+  - Added `validation_metrics` object to `models/feature_columns.json` documenting Phase 2 empirical test set benchmarks (17,541 continuous hourly samples across 2024–2025).
+  - Exposed `GET /api/metrics` in `backend/main.py` providing metadata on the deployed model, feature count (28), prediction horizon (3h), baseline model comparisons (Random Forest, Unweighted XGBoost, Storm-Weighted XGBoost), and gradient gain feature importance rankings.
+- **Frontend Architecture (`frontend/src/app/metrics/` & `frontend/src/app/page.tsx`):**
+  - **Seamless Navigation Switcher:** Added a top navigation pill switcher to both `/` and `/metrics` enabling frictionless toggling between live **"Mission Control"** and empirical **"Model Benchmarks"** without cluttering real-time telemetry displays.
+  - **Dedicated Benchmarks Page (`frontend/src/app/metrics/page.tsx`):**
+    1. *Hero Validation Banner:* Details the 17,541-hour holdout test set (2024–2025), 70,122-hour training history (2016–2023), and 3-hour forward forecast horizon.
+    2. *4 Top Benchmark KPI Cards:* Storm Recall (`53.4%`, +33.8% relative gain), Storm Precision (`44.8%`), Storm F1-Score (`0.487`), and Continuous Regression MAE (`0.742 Kp` / RMSE `0.968 Kp` / R² `0.513`).
+    3. *Model Architecture Progression Table:* Compares Random Forest Baseline, Unweighted XGBoost, and HelioShield Storm-Weighted XGBoost across all continuous and classification metrics with deep operational tradeoff analysis.
+    4. *Recharts Feature Importance Chart:* Horizontal bar visualization highlighting top physical drivers: Dynamic Pressure ($P_{dyn}$ at 26.4%), Electric Field Coupling ($V \times B_z$ at 16.9%), Solar Wind Velocity ($v$ at 12.7%), 6h Max Speed (7.7%), 6h Min Southward $B_z$ (5.6%), and 6h Mean Coupling (5.4%).
+    5. *Class Imbalance Breakdown:* Visualizes the 47:1 natural quiet-to-storm ratio (97.9% quiet vs. 2.1% storm) and explains why a 5.0x storm sample weight multiplier was applied to prevent fatal false negatives.
+- **Verification:**
+  - `GET http://127.0.0.1:8000/api/metrics` verified returning valid JSON with HTTP 200 OK.
+  - `GET http://localhost:3000/metrics` verified rendering cleanly with zero console errors.
+  - Both FastAPI backend (`task-667`) and Next.js frontend (`task-731`) confirmed active in persistent background daemon sessions.

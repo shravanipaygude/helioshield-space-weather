@@ -59,6 +59,7 @@ model_state: Dict[str, Any] = {
     "feature_columns": [],
     "alert_threshold_kp": 4.5,
     "horizon_hours": 3,
+    "validation_metrics": {},
     "model_loaded": False,
     "is_booster": False,
     "load_error": None
@@ -75,6 +76,7 @@ def load_model():
                 model_state["feature_columns"] = schema.get("feature_columns", load_feature_columns())
                 model_state["alert_threshold_kp"] = schema.get("alert_threshold_kp", 4.5)
                 model_state["horizon_hours"] = schema.get("horizon_hours", 3)
+                model_state["validation_metrics"] = schema.get("validation_metrics", {})
         else:
             model_state["feature_columns"] = load_feature_columns()
 
@@ -161,7 +163,8 @@ def root():
         "version": "1.0.0",
         "docs_url": "/docs",
         "health_url": "/api/health",
-        "forecast_url": "/api/forecast"
+        "forecast_url": "/api/forecast",
+        "metrics_url": "/api/metrics"
     }
 
 
@@ -185,6 +188,29 @@ def get_health():
         },
         "gemini_api_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
         "environment": "production" if os.getenv("ENVIRONMENT") == "production" else "development"
+    }
+
+
+@app.get("/api/metrics")
+def get_metrics():
+    """
+    Validation benchmarks endpoint returning unseen test set evaluation metrics (2024–2025),
+    baseline model comparisons, and feature importance rankings.
+    """
+    metrics_data = model_state.get("validation_metrics", {})
+    if not metrics_data and FEATURE_PATH.exists():
+        with open(FEATURE_PATH, "r", encoding="utf-8") as f:
+            schema = json.load(f)
+            metrics_data = schema.get("validation_metrics", {})
+            model_state["validation_metrics"] = metrics_data
+
+    return {
+        "status": "success",
+        "algorithm": metrics_data.get("algorithm", "Storm-Weighted XGBoost Regressor"),
+        "features_count": len(model_state.get("feature_columns", [])) or 28,
+        "horizon_hours": model_state.get("horizon_hours", 3),
+        "alert_threshold_kp": model_state.get("alert_threshold_kp", 4.5),
+        "validation_metrics": metrics_data
     }
 
 

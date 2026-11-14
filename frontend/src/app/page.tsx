@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   ShieldAlert,
   Activity,
@@ -16,7 +17,8 @@ import {
   Cpu,
   Clock,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  BarChart3
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -264,6 +266,24 @@ export default function SpaceWeatherDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Navigation Pill Switcher */}
+          <nav aria-label="Dashboard views" className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 shadow-inner">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm"
+            >
+              <Activity className="w-3.5 h-3.5 text-cyan-400" />
+              Mission Control
+            </Link>
+            <Link
+              href="/metrics"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-slate-400" />
+              Model Benchmarks
+            </Link>
+          </nav>
 
           {/* Center: Live UTC Clock & Telemetry Status */}
           <div className="flex items-center gap-3 text-xs font-mono">

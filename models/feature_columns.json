@@ -30,5 +30,86 @@
     "speed_roll6_max"
   ],
   "alert_threshold_kp": 4.5,
-  "horizon_hours": 3
+  "horizon_hours": 3,
+  "validation_metrics": {
+    "algorithm": "Storm-Weighted XGBoost Regressor",
+    "train_window": "2016-2023 (70,122 hrs)",
+    "test_window": "2024-2025 (17,541 hrs)",
+    "mae": 0.742,
+    "rmse": 0.968,
+    "r2_score": 0.513,
+    "storm_threshold_kp": 5.0,
+    "precision": 44.8,
+    "recall": 53.4,
+    "f1_score": 0.487,
+    "baseline_comparison": [
+      {
+        "model": "Random Forest",
+        "mae": 0.742,
+        "rmse": 0.980,
+        "r2": 0.501,
+        "precision": 40.5,
+        "recall": 39.9,
+        "f1": 0.445,
+        "is_deployed": false
+      },
+      {
+        "model": "Unweighted XGBoost",
+        "mae": 0.728,
+        "rmse": 0.957,
+        "r2": 0.524,
+        "precision": 45.2,
+        "recall": 43.3,
+        "f1": 0.482,
+        "is_deployed": false
+      },
+      {
+        "model": "Storm-Weighted XGBoost (HelioShield)",
+        "mae": 0.742,
+        "rmse": 0.968,
+        "r2": 0.513,
+        "precision": 44.8,
+        "recall": 53.4,
+        "f1": 0.487,
+        "is_deployed": true
+      }
+    ],
+    "top_features": [
+      {
+        "name": "dynamic_pressure",
+        "importance": 0.264,
+        "label": "Dynamic Pressure (P_dyn)"
+      },
+      {
+        "name": "electric_field_coupling",
+        "importance": 0.169,
+        "label": "Electric Field Coupling (V × Bz)"
+      },
+      {
+        "name": "wind_speed",
+        "importance": 0.127,
+        "label": "Solar Wind Velocity (v)"
+      },
+      {
+        "name": "speed_roll6_max",
+        "importance": 0.077,
+        "label": "6h Max Solar Wind Speed"
+      },
+      {
+        "name": "bz_roll6_min",
+        "importance": 0.056,
+        "label": "6h Min Southward Bz"
+      },
+      {
+        "name": "electric_field_coupling_roll6_mean",
+        "importance": 0.054,
+        "label": "6h Mean Electric Coupling"
+      }
+    ],
+    "class_imbalance": {
+      "quiet_hours_pct": 97.9,
+      "storm_hours_pct": 2.1,
+      "weight_multiplier": 5.0
+    }
+  }
 }
