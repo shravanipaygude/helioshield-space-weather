@@ -42,3 +42,33 @@
   - **XGBoost (Unweighted):** MAE `0.728` | RMSE `0.957` | $R^2$ `0.524` | Storm Recall ($K_p \ge 5$) `43.3%` | F1 `0.482`
   - **Storm-Weighted XGBoost (Selected Final Model):** Applied `5.0x` sample weights for $K_p \ge 5.0$ and `2.5x` for $K_p \ge 4.0$, boosting Storm Recall to **`53.4%`** and Storm F1-Score to **`0.487`** (MAE `0.742`, RMSE `0.968`, $R^2$ `0.513`), with `dynamic_pressure` and `electric_field_coupling` ranked as the top two predictive drivers.
 - **Artifacts Saved:** `notebooks/02_feature_engineering_and_training.ipynb`, `models/kp_forecaster.json`, `models/feature_columns.json`
+
+---
+
+## Phase 3: Real-Time Telemetry Ingestion, FastAPI Backend & AI Reasoning Layer
+- **Date:** November 14, 2026
+- **Tools & Libraries Used:** Python 3.13, FastAPI, Uvicorn, Pandas, NumPy, Scikit-Learn, XGBoost, Requests, Python-Dotenv, Google-GenAI
+- **Architecture & Modules Implemented:**
+  1. **Real-Time Telemetry Pipeline (`backend/telemetry.py`):**
+     - Live fetching of NOAA Space Weather Prediction Center (SWPC) 1-minute Real-Time Solar Wind (RTSW) magnetic (`rtsw_mag_1m.json`) and plasma (`rtsw_wind_1m.json`) JSON streams with custom `User-Agent`.
+     - Active satellite filtering (`active == True`) to isolate valid L1 DSCOVR/ACE measurements.
+     - Resampling to 1-hour intervals (`bz_gsm`, `bt`, `wind_speed`, `proton_density`).
+     - On-the-fly computation of the exact 28 physics, lag (1h, 3h, 6h), and 6-hour rolling features matching `models/feature_columns.json`.
+     - Time-series forward/backward imputation and graceful synthetic fallback generation when NOAA feeds undergo scheduled cycling.
+  2. **AI Reasoning Engine (`backend/ai_explainer.py`):**
+     - Powered by Google GenAI (`gemini-2.5-flash`) when `GEMINI_API_KEY` is configured in `.env`.
+     - Deterministic physics-informed rule-based fallback when no key is set or during API timeouts.
+     - Generates structured JSON disruption briefings across critical infrastructure:
+       - **Satellites:** LEO thermospheric orbital drag, GEO surface charging, star tracker blinding.
+       - **GPS & Aviation:** GNSS L-band scintillation, single-frequency positioning errors, trans-polar HF radio blackouts.
+       - **Power Grids:** Geomagnetically Induced Currents (GIC), transformer core saturation, harmonic resonance.
+       - **Aurora:** Visibility levels, geographic latitude reach, and dynamic display intensity.
+  3. **High-Performance FastAPI Service (`backend/main.py`):**
+     - CORS middleware enabled for modern frontend consumption (Next.js/React).
+     - Model lifespan loading: dynamically mounts the storm-weighted XGBoost regressor (`models/kp_forecaster.json`).
+     - `GET /api/health`: Verifies model state, feature schema alignment, and operational health.
+     - `GET /api/forecast`: End-to-end pipeline returning 3-hour Kp forecast, current telemetry snapshot, AI briefing, and 24-hour historical trend.
+- **Verification & Testing:**
+  - Automated endpoint tests passing with HTTP `200 OK` on both live streams and simulated storm injections (`simulate_storm=true`).
+  - Active background server daemon running on `http://127.0.0.1:8000`.
+- **Artifacts Saved:** `backend/requirements.txt`, `backend/telemetry.py`, `backend/ai_explainer.py`, `backend/main.py`, `.env.example`
