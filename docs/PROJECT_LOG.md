@@ -27,3 +27,18 @@
   - **Target Scaling:** Scaled `kp_10` by `0.1` to obtain the standard `0.0–9.0` $K_p$ geomagnetic storm index and mapped NOAA storm categories (`G0` through `G5`).
   - **Class Imbalance Discovery:** 97.9% of hours (85,827) are quiet (`G0`, $K_p < 5$), while severe storms are rare (`G3`: 123 hrs, `G4`: 57 hrs, `G5`: 6 hrs). Therefore, Phase 2 model evaluation will prioritize RMSE/MAE on high-$K_p$ events and storm-detection F1/recall rather than raw accuracy alone.
 - **Artifacts Saved:** `notebooks/01_eda_and_cleaning.ipynb`
+
+---
+
+## Phase 2: Feature Engineering & ML Model Training
+- **Date:** November 14, 2026
+- **Tools & Libraries Used:** Google Colab, Python, Pandas, NumPy, Scikit-Learn, XGBoost, Matplotlib
+- **Feature Engineering (28 Live-Compatible Features):**
+  - Restricted all input features strictly to sensors available in NOAA's real-time L1 satellite feeds (`bz_gsm`, `wind_speed`, `proton_density`) to ensure zero train/serving skew in Phase 3.
+  - Derived physical coupling features: southward magnetic component (`bz_south`), solar wind dynamic pressure (`dynamic_pressure`), and motional electric field (`electric_field_coupling = -wind_speed * bz_south`).
+  - Added 1h, 3h, and 6h lag features plus 6-hour rolling averages/extremes (`bz_roll6_min`, `speed_roll6_max`) to forecast **`target_kp_3h`** ($K_p$ index 3 hours ahead).
+- **Model Comparison & Evaluation (Chronological Split: Train 2016–2023 | Test 2024–2025):**
+  - **Random Forest Baseline:** MAE `0.742` | RMSE `0.980` | $R^2$ `0.501` | Storm Recall ($K_p \ge 5$) `39.9%` | F1 `0.445`
+  - **XGBoost (Unweighted):** MAE `0.728` | RMSE `0.957` | $R^2$ `0.524` | Storm Recall ($K_p \ge 5$) `43.3%` | F1 `0.482`
+  - **Storm-Weighted XGBoost (Selected Final Model):** Applied `5.0x` sample weights for $K_p \ge 5.0$ and `2.5x` for $K_p \ge 4.0$, boosting Storm Recall to **`53.4%`** and Storm F1-Score to **`0.487`** (MAE `0.742`, RMSE `0.968`, $R^2$ `0.513`), with `dynamic_pressure` and `electric_field_coupling` ranked as the top two predictive drivers.
+- **Artifacts Saved:** `notebooks/02_feature_engineering_and_training.ipynb`, `models/kp_forecaster.json`, `models/feature_columns.json`
